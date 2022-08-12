@@ -29,4 +29,7 @@ eucledian_mt <- tibble(
     toid = rep(colnames(mt),1829)
     )
 head(eucledian_mt)
-
+write_csv(
+  eucledian_mt,
+  "Documentos/UPCH/MalariaNetwork/eucledian_matrix.csv"
+  )
