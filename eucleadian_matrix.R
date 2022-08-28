@@ -2,6 +2,7 @@
 library(sf)
 library(tidyverse)
 # 2. Reading of vector layer of villages --------------------------------
+# geometry of type point
 cp <- st_read(
   "/home/am/Documentos/UPCH/MalariaNetwork/recursos/centros_poblados.gpkg"
   )
