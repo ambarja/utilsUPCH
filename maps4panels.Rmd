@@ -13,125 +13,215 @@ library(sf)
 library(dplyr)
 library(mapview)
 library(crosstalk)
-library(tidyr)
+library(tidyverse)
+library(leaflet)
+library(DT)
+library(leaflet.extras)
+db <- st_read("data/spdb_drones.gpkg") %>%
+  mutate(lon = round(st_coordinates(.)[,1],2),
+         lat = round(st_coordinates(.)[,2],2),
+         cp = str_to_title(cp)) |> select(cp,ruta,year,Deforestation,Nigth_light,lon,lat)%>% 
+  st_drop_geometry()
+
+sp <- st_read("data/db_drones.gpkg")
+sp1 <- sp |> filter(ruta == "Iquitos-Nauta")
+sp2 <- sp |> filter(ruta == "Santa Clara - Santo Tomas")
+sp3 <- sp |> filter(ruta == "Zungarococha")
+sp4 <- sp |> filter(ruta == "Other")
+
+ruta1 <- db |> filter(ruta == "Iquitos-Nauta")
+ruta2 <- db |> filter(ruta == "Santa Clara - Santo Tomas")
+ruta3 <- db |> filter(ruta == "Zungarococha")
+ruta4 <- db |> filter(ruta == "Other")
+sd1 <- SharedData$new(ruta1)
+sd2 <- SharedData$new(ruta2)
+sd3 <- SharedData$new(ruta3)
+sd4 <- SharedData$new(ruta4)
 ```
 
 Iquitos - Nauta
 ==============================================================
-### Iquitos - Nauta
+
+Column {.sidebar data-width=700}
+--------------------------------------------------------------
+
+<h3><strong>Village selected 🔍</strong></h3> 
+
+```{r filters}
+filter_select(
+  id = "cp",
+  label = "",
+  sharedData = sd1,
+  group = ~cp
+)
+```
+
+<div align="center">
+```{r}
+sd1 %>%
+  datatable(
+    colnames =  c("Village","Route","Year","Deforestation(km2)","Night ligths(index)","Lon","Lat"),
+    class = "compact",
+    options = list(
+     deferRender = TRUE,
+      scrollY = 300,
+      scroller = TRUE)
+    )
+```
+</div>
+
+
+Column {data-width=300}
+--------------------------------------------------------------
+
+### Web map <i class="icon ion-map"></i>
 
 ```{r echo=FALSE,message=FALSE,warning=FALSE}
-villages <- st_read("data/villages_1km.gpkg",quiet = T) %>%
-  filter(CPINEI != " ")  %>% 
-  select(NOMCP,DIST)  %>%
-  mutate(NOMCP = toupper(NOMCP))
-comunidad_1 <- c(
-  "CAHUIDE","VARILLAL","LOS DELFINES",
-  "PEÑA NEGRA","QUISTOCOCHA","AA.HH TERMINAL",
-  "AA.HH. VILLA SELVA")
-
-data <- read.csv(
-  "data/cp_drones.csv") |>
-  mutate(NOMCP = toupper(NOMCP)) |> 
-  filter(NOMCP %in% comunidad_1) |> 
-  st_drop_geometry() |> 
-  select(XGD, YGD,NOMCP) |> 
-  rename(lon = XGD,
-         lat = YGD,
-          cp = NOMCP
-         ) |> 
-  as_tibble()
-
-nofind <- tibble(
-  lat = c(-3.796194,-3.7987158),
-  lon = c(-73.2992432,-73.310606),
-  cp = c("AA.HH. VILLA SELVA","AA.HH SAN ANTONIO DEL TERMINAL")
-)
-
-eje_in <- bind_rows(data,nofind) |> 
-  st_as_sf(coords = c("lon","lat"),crs = 4326) |> 
-  mutate(color = "old") |> 
-  select(cp,color,geometry)
-
-norepeat <- villages[which(!villages$NOMCP %in% eje_in$cp),]
-norepeat <- norepeat |> 
-  mutate(color = "new") |>
-  select(-c(DIST)) |> 
-  rename(cp = NOMCP,geometry = geom) |> 
-  select(cp,geometry,color)
-
-eje_n1 <- bind_rows(eje_in,norepeat)
-mapview(
-  eje_n1,
-  legend = F,
-  zcol = "cp",
-  col.regions = c("red","blue"),
-  layer.name = "Iquitos-Nauta")
+ sd1 |>  
+  leaflet() |> 
+  addProviderTiles(providers$OpenStreetMap) |> 
+  addAwesomeMarkers(popup = paste0("<strong>",sp1$cp,"</strong>")) |> 
+  addResetMapButton()
 ```
+
+
 
 Santa Clara-Santo Tomas
 =====================================================================
 
+Column {.sidebar data-width=700}
+--------------------------------------------------------------
+<h3><strong>Village selected 🔍</strong></h3> 
+
 ```{r}
-comunidad_2 <- c("SANTA CLARA","SANTO TOMAS","RUMOCOCHA") 
-data <- read.csv(
-  "data/cp_drones.csv") |>
-  mutate(NOMCP = toupper(NOMCP)) |> 
-  filter(NOMCP %in% comunidad_2) |> 
-  st_drop_geometry() |> 
-  select(XGD, YGD,NOMCP) |> 
-  rename(lon = XGD,
-         lat = YGD,
-         cp = NOMCP
-  ) |> 
-  as_tibble()
+filter_select(
+  id = "cp",
+  label = "",
+  sharedData = sd2,
+  group = ~cp
+)
+```
 
-eje_in <- bind_rows(data,nofind) |> 
-  st_as_sf(coords = c("lon","lat"),crs = 4326)
 
-mapview(eje_in, legend = F)
+<div align="center">
+```{r}
+sd2 %>%
+  datatable(
+    colnames =  c("Village","Route","Year","Deforestation(km2)","Night ligths(index)","Lon","Lat"),
+    class = "compact",
+    width = "100%",
+    options = list(
+     deferRender = TRUE,
+      scrollY = 300,
+      scroller = TRUE,
+      columnDefs = list(list(className = 'dt-center', targets = 0:4)))
+    )
+```
+</div>
+
+Column {data-width=300}
+--------------------------------------------------------------
+
+### Web map <i class="icon ion-map"></i>
+
+```{r echo=FALSE,message=FALSE,warning=FALSE}
+ sd2 |>  
+  leaflet() |> 
+  addProviderTiles(providers$OpenStreetMap) |> 
+  addAwesomeMarkers(popup = paste0("<strong>",sp2$cp,"</strong>")) |> 
+  addResetMapButton()
 ```
 
 
 Zungarococha
 ========================================================================
+
+Column {.sidebar data-width=700}
+--------------------------------------------------------------
+<h3><strong>Village selected 🔍</strong></h3> 
+
 ```{r}
-comunidad_3 <- c("LLANCHAMA","NINA RUMI","PUERTO ALMENDRA","SANTA ISABEL DE ZUNGARO COCHA")
-data <- read.csv(
-  "data/cp_drones.csv") |>
-  mutate(NOMCP = toupper(NOMCP)) |> 
-  filter(NOMCP %in% comunidad_3) |> 
-  st_drop_geometry() |> 
-  select(XGD, YGD,NOMCP) |> 
-  rename(lon = XGD,
-         lat = YGD,
-         cp = NOMCP
-  ) |> 
-  as_tibble()
+filter_select(
+  id = "cp",
+  label = "",
+  sharedData = sd3,
+  group = ~cp
+)
+```
 
-eje_in <- bind_rows(data,nofind) |> 
-  st_as_sf(coords = c("lon","lat"),crs = 4326)
 
-mapview(eje_in, legend = F)
+<div align="center">
+```{r}
+sd3 %>%
+  datatable(
+    colnames =  c("Village","Route","Year","Deforestation(km2)","Night ligths(index)","Lon","Lat"),
+    class = "compact",
+    width = "100%",
+    options = list(
+     deferRender = TRUE,
+      scrollY = 300,
+      scroller = TRUE,
+      columnDefs = list(list(className = 'dt-center', targets = 0:4)))
+    )
+```
+</div>
+
+Column {data-width=300}
+--------------------------------------------------------------
+
+### Web map <i class="icon ion-map"></i>
+
+```{r echo=FALSE,message=FALSE,warning=FALSE}
+ sd3 |>  
+  leaflet() |> 
+  addProviderTiles(providers$OpenStreetMap) |> 
+  addAwesomeMarkers(popup = paste0("<strong>",sp3$cp,"</strong>")) |> 
+  addResetMapButton()
 ```
 
 Other
 =====================================================================
+
+Column {.sidebar data-width=700}
+--------------------------------------------------------------
+<h3><strong>Village selected 🔍</strong></h3> 
+
 ```{r}
-comunidad_4 <- c("TARAPOTO","HUATURI","SAN PABLO DE CUYANA")
-data <- read.csv(
-  "data/cp_drones.csv") |>
-  mutate(NOMCP = toupper(NOMCP)) |> 
-  filter(NOMCP %in% comunidad_4) |> 
-  st_drop_geometry() |> 
-  select(XGD, YGD,NOMCP) |> 
-  rename(lon = XGD,
-         lat = YGD,
-         cp = NOMCP
-  ) |> as_tibble()
-
-eje_in <- bind_rows(data,nofind) |> 
-  st_as_sf(coords = c("lon","lat"),crs = 4326)
-
-mapview(eje_in, legend = F)
+filter_select(
+  id = "cp",
+  label = "",
+  sharedData = sd4,
+  group = ~cp
+)
 ```
+
+
+<div align="center">
+```{r}
+sd4 %>%
+  datatable(
+    colnames =  c("Village","Route","Year","Deforestation(km2)","Night ligths(index)","Lon","Lat"),
+    class = "compact",
+    width = "100%",
+    options = list(
+     deferRender = TRUE,
+      scrollY = 300,
+      scroller = TRUE,
+      columnDefs = list(list(className = 'dt-center', targets = 0:4)))
+    )
+```
+</div>
+
+Column {data-width=300}
+--------------------------------------------------------------
+
+### Web map <i class="icon ion-map"></i>
+
+```{r echo=FALSE,message=FALSE,warning=FALSE}
+ sd4 |>  
+  leaflet() |> 
+  addProviderTiles(providers$OpenStreetMap) |> 
+  addAwesomeMarkers(popup = paste0("<strong>",sp4$cp,"</strong>")) |> 
+  addResetMapButton()
+```
+

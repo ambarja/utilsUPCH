@@ -53,6 +53,7 @@ rm(nofind)
 rm(data)
 rm(norepeat)
 rm(villages)
+mapview(iquitos_nauta)
 # Ruta 2 ------------------------------------------------------------------
 #Santa Clara-Santo Tomas
 comunidad_2 <- c("SANTA CLARA","SANTO TOMAS","RUMOCOCHA") 
@@ -77,7 +78,7 @@ nuevos <- tibble(
   lat = c(-3.7961646839999617,-3.7982742679999433,-3.806527537999955),
   lon = c(-73.35946499999994,-73.33290658799996,-73.32575276499995)
   ) |> 
-  st_as_sf(coords = c("lat","lon"),crs= 4326) |> 
+  st_as_sf(coords = c("lon","lat"),crs= 4326) |> 
   mutate(class = "new")
 
 StaClara_StoTomas <- bind_rows(eje_in,nuevos) |> 
@@ -88,6 +89,7 @@ rm(nuevos)
 rm(villages)
 rm(comunidad_2)
 rm(norepeat)
+mapview(StaClara_StoTomas)
 # Carretera Zungarococha --------------------------------------------------
 comunidad_3 <- c("LLANCHAMA","NINA RUMI","PUERTO ALMENDRA","SANTA ISABEL DE ZUNGARO COCHA")
 data <- read.csv(
@@ -120,7 +122,7 @@ rm(data)
 rm(eje_in)
 rm(nuevo)
 rm(comunidad_3)
-
+mapview(zungarococha)
 # Otros -------------------------------------------------------------------
 comunidad_4 <- c("TARAPOTO","HUATURI","SAN PABLO DE CUYANA")
 data <- tibble(
@@ -133,8 +135,9 @@ data <- tibble(
 otros <- data |> mutate(class = "old", ruta = "Other") 
 rm(data)
 rm(comunidad_4)
-
+mapview(otros)
 # Rutas em total ------------------------------------------------
-db_drones <- bind_rows(iquitos_nauta,StaClara_StoTomas) |> 
+db_drones <- bind_rows(iquitos_nauta,StaClara_StoTomas,zungarococha,otros) |> 
   select(cp,ruta,class,geometry)
-write_sf(db_drones,"db_drones.gpkg")
+write_sf(db_drones,"data/db_drones.gpkg")
+mapview(db_drones)
